@@ -1,0 +1,6 @@
+framework module Pods_SPAccount {
+  umbrella header "Pods-SPAccount-umbrella.h"
+
+  export *
+  module * { export * }
+}

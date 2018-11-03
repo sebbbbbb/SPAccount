@@ -1,19 +1,13 @@
 import UIKit
 import RealmSwift
 
-struct Category {
-    let amount: Int
-    let name: String
-}
-
 class ViewController: UIViewController {
 
     @IBOutlet weak var tableView: UITableView!
     @IBOutlet weak var textField: UITextField!
     @IBOutlet weak var labelCount: UILabel!
     
-    var categories = [Category]()
-    var entities = try! Realm().objects(Operation.self) {
+    var categories = try! Realm().objects(Category.self) {
         didSet {
             self.tableView.reloadData()
         }
@@ -30,28 +24,38 @@ class ViewController: UIViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         self.title = "Accueil"
-        self.buildCategories()
-    }
-    
-    private func buildCategories() {
         
-        let categoryNames = Set(self.entities.map {$0.category})
-        var cat = [Category]()
-        categoryNames.forEach { category in
+        
+        if categories.isEmpty {
             
-            let amount = self.entities.filter {$0.category == category }
-                .map {$0.amount}
-                .reduce(0, +)
+            try! self.realm.write {
+                let category1 = Category()
+                category1.name = "Bouffe"
+                category1.cap = 400
+                
+                let category2 = Category()
+                category2.name = "Fun"
+                category2.cap = 220
+                
+                let category3 = Category()
+                category3.name = "Maison"
+                category3.cap = 70
+                
+                let category4 = Category()
+                category4.name = "Sappe"
+                category4.cap = 55
             
-            cat.append(Category(amount: amount, name: category))
+                self.realm.add(category1)
+                self.realm.add(category2)
+                self.realm.add(category3)
+                self.realm.add(category4)
+                
+                
+            }
+            
+            
         }
-        
-        self.categories = cat
-        self.tableView.reloadData()
     }
-    
-    
-    
     
     //MARK : Actions
     
@@ -70,22 +74,21 @@ class ViewController: UIViewController {
     @IBAction func addOperationX() {
         
         // Fun par défaut
-        let category = self.category(from: (self.tableView.indexPathForSelectedRow?.row) ?? -1)
+        let category = self.category(from: (self.tableView.indexPathForSelectedRow?.row) ?? 0)
         let operation = Operation()
         operation.amount = cpt
         operation.name = self.textField.text ?? ""
-        operation.category = category
+        
         
         try! self.realm.write {
-            realm.add(operation)
+            category.operations.append(operation)
         }
         
         self.cpt = 0
-        self.buildCategories()
     }
     
-    private func category(from index: Int) -> String {
-        return self.categories[index].name
+    private func category(from index: Int) -> Category {
+        return self.categories[index]
     }
 }
 
@@ -99,7 +102,6 @@ extension ViewController: UITableViewDataSource {
         let category = self.categories[indexPath.row]
         let cell = UITableViewCell(style: .subtitle, reuseIdentifier: nil)
         cell.textLabel?.text = category.name
-        cell.detailTextLabel?.text = "\(category.amount) €"
         return cell
     }
 }

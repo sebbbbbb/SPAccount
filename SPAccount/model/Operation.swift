@@ -12,7 +12,5 @@ import RealmSwift
 class Operation: Object {
     @objc dynamic var name = ""
     @objc dynamic var amount = 0
-    @objc dynamic var creationDate = Date()
-    @objc dynamic var category = ""
-    
+    @objc dynamic var creationDate = Date()    
 }

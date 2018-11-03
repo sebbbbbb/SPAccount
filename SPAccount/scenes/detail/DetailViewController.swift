@@ -12,7 +12,7 @@ import RealmSwift
 class DetailViewController: UIViewController {
 
     @IBOutlet weak var tableView: UITableView!
-    var entities = try! Realm().objects(Operation.self) {
+    var categories = try! Realm().objects(Category.self) {
         didSet {
             self.tableView.reloadData()
         }
@@ -24,16 +24,36 @@ class DetailViewController: UIViewController {
 }
 
 extension DetailViewController: UITableViewDataSource {
+    
+    func tableView(_ tableView: UITableView, titleForHeaderInSection section: Int) -> String? {
+        let category = self.categories[section]
+        
+        // Mois
+        let monthExpenses = category.getCurrentMonthOperation().map {$0.amount}.reduce(0, +)
+        let monthPercent = String(Int(CGFloat(monthExpenses) / CGFloat(category.cap) * 100))
+        
+        // YTD
+        let monthCount = 2
+        let YTDExpenses = category.operations.map {$0.amount}.reduce(0, +)
+        let YTDPercent = String(Int(CGFloat(YTDExpenses) / CGFloat(category.cap * monthCount) * 100))
+        
+        return "\(category.name)  \(category.cap - monthExpenses)€ \(monthPercent)% | \(category.cap * monthCount - YTDExpenses)€ \(YTDPercent)%"
+    }
+    
+    func numberOfSections(in tableView: UITableView) -> Int {
+        return self.categories.count
+    }
+    
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        return self.entities.count
+        return self.categories[section].getCurrentMonthOperation().count
     }
     
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         
-        let category = self.entities[indexPath.row]
+        let operation = self.categories[indexPath.section].getCurrentMonthOperation()[indexPath.row]
         let cell = UITableViewCell(style: .subtitle, reuseIdentifier: nil)
-        cell.textLabel?.text = category.name + " / " + category.category
-        cell.detailTextLabel?.text = "\(category.amount) €"
+        cell.textLabel?.text = operation.name
+        cell.detailTextLabel?.text = "\(operation.amount)€" + " - " + operation.creationDate.toString()
         return cell
     }
 }
