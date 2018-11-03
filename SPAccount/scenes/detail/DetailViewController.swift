@@ -18,42 +18,34 @@ class DetailViewController: UIViewController {
         }
     }
     
+    var viewModel: DetailViewModel?
+    
     override func viewDidLoad() {
         super.viewDidLoad()
+        self.viewModel = DetailViewModel(categories: categories.compactMap {$0})
     }
 }
 
 extension DetailViewController: UITableViewDataSource {
     
     func tableView(_ tableView: UITableView, titleForHeaderInSection section: Int) -> String? {
-        let category = self.categories[section]
-        
-        // Mois
-        let monthExpenses = category.getCurrentMonthOperation().map {$0.amount}.reduce(0, +)
-        let monthPercent = String(Int(CGFloat(monthExpenses) / CGFloat(category.cap) * 100))
-        
-        // YTD
-        let monthCount = 2
-        let YTDExpenses = category.operations.map {$0.amount}.reduce(0, +)
-        let YTDPercent = String(Int(CGFloat(YTDExpenses) / CGFloat(category.cap * monthCount) * 100))
-        
-        return "\(category.name)  \(category.cap - monthExpenses)€ \(monthPercent)% | \(category.cap * monthCount - YTDExpenses)€ \(YTDPercent)%"
+        return self.viewModel?.categoryViewModel[section].titleForHeader
     }
     
     func numberOfSections(in tableView: UITableView) -> Int {
-        return self.categories.count
+        return self.viewModel?.categoryViewModel.count ?? 0
     }
     
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        return self.categories[section].getCurrentMonthOperation().count
+        return self.viewModel?.categoryViewModel[section].items.count ?? 0
     }
     
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         
-        let operation = self.categories[indexPath.section].getCurrentMonthOperation()[indexPath.row]
+        let operationViewModel = self.viewModel?.categoryViewModel[indexPath.section].items[indexPath.row]
         let cell = UITableViewCell(style: .subtitle, reuseIdentifier: nil)
-        cell.textLabel?.text = operation.name
-        cell.detailTextLabel?.text = "\(operation.amount)€" + " - " + operation.creationDate.toString()
+        cell.textLabel?.text = operationViewModel?.mainText
+        cell.detailTextLabel?.text = operationViewModel?.subText
         return cell
     }
 }
